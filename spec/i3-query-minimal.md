@@ -120,6 +120,10 @@ Ossie 的 `derived_by` 定义"由其他事实推出的事实"。
 
 ### 3.3 最小表达力（**明确边界**）
 
+> **表达式语言归属 Ossie**（`core-spec/expression_language.md`，SQL 子集）。
+> **本规范只约束"最小实现必须支持到什么程度"，不另行定义语言。**
+> 见 [`i4-action-minimal.md`](i4-action-minimal.md) §2.3。
+
 **支持的派生表达式形式：路径型**
 
 ```

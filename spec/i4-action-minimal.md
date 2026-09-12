@@ -145,14 +145,41 @@ action:
 
 ### 2.3 表达式语言
 
+> **⚠️ v0.2.1 修正：不应自己发明或推荐外部语言 —— Ossie 已有表达式语言规范。**
+
+Ossie 在 `core-spec/expression_language.md` 中定义了表达式语言
+（**状态：Proposed Final**，工作组含 Snowflake / Databricks / dbt Labs / Starburst / Cube / Denodo 等）。
+
+**它是 SQL 的一个子集**，而非通用表达式语言：
+
+| 组成 | 内容 |
+|---|---|
+| SQL 子集 | 支持的构造 + 运算符优先级 + **明确列出不支持什么** |
+| 聚合函数 | Core / Statistical / Percentile / Conditional（REQUIRED）+ Approximate（RECOMMENDED） |
+| 日期时间函数 | 当前时刻 / 提取 / 截断 / 算术 / 构造 |
+| 字符串函数 | 操作 / 搜索 / 格式化 |
+| 命名空间与标识符解析 | 与 `ontology.yaml` 的概念/关系对齐 |
+
+**条款：**
+
 | # | 条款 |
 |---|---|
-| **E-1** | 实现 **MUST** 在文档中声明所支持的表达式语言 |
-| **E-2** | 表达式语言 **MUST** 至少支持：比较运算、布尔组合、目标实例属性引用 |
-| **E-3** | 实现 **SHOULD** 使用 **CEL**（[Common Expression Language](https://github.com/google/cel-spec)） |
+| **E-1** | 动作定义中的 `preconditions[].expression`、`parameters[].constraints`、`effects[].set.value` **MUST** 使用 **Ossie 表达式语言** |
+| **E-2** | 实现 **MUST** 声明其支持的 Ossie 表达式子集；**MUST NOT** 静默接受它不支持的构造 |
+| **E-3** | 在 Ossie 表达式语言定稿前，实现 **MAY** 支持其他语言（如 CEL）作为**过渡**，但 **MUST** 在文档中标注为偏离 |
+| **E-4** | 同一次提交内 `NOW()` 等时刻函数 **MUST** 恒定 |
 
-**为什么推荐 CEL**：它已是 OpenFGA 条件表达式的语言（框架 §13.5 采用 OpenFGA），
-多个语言有实现，且**求值必然终止**（无循环）—— 这对动作热路径很重要。
+**为什么这条修正重要：**
+
+- 框架的原则是「**符合的部分用 Ossie**」。表达式出现在 `requires`、`derived_by`、
+  以及本规范的 `preconditions` / `constraints` / `effects` 中 —— **它属于 Ossie 的地盘**。
+- 自己推荐 CEL，会造成**同一个语义层里两套表达式语言**（Ossie 的规则用 SQL 子集，
+  动作的前置条件用 CEL），这是人为制造的割裂。
+- 而且 Ossie 的表达式语言**明确对齐本体标识符**（`concept` / `relationship` 的命名空间解析），
+  这是通用语言（CEL）做不到的。
+
+**⚠️ 已知偏离**：本仓库的参考实现（`reference/expr.py`）用的是 **CEL 子集**，
+因为它在 Ossie 表达式语言定稿前写成。**这是 `E-3` 允许的过渡态，已标注为偏离。**
 
 **表达式上下文（MUST 提供）：**
 
@@ -717,6 +744,7 @@ effects:
 | v0.1 | 2026-09 | 初稿。定义最小 I4：单实例、同步、无副作用、有审计 |
 | v0.1.1 | 2026-09 | 依据参考实现反馈修正：新增 `S-4`（约束强制点在写入路径）；`R-5` 改为条件式；新增 §9 记录 4 条缺口 |
 | **v0.2** | 2026-09 | **多实例事务**（§10.1，含 `M-8` YAML `on` 键陷阱）；**null 语义**（§10.2，解决发现 3）；**建议移交 I6**（§10.3，解决发现 4）。同步产出 I3-min 与 I6-min 规范 |
+| **v0.2.1** | 2026-09 | **表达式语言修正**（§2.3）：改用 Ossie 的表达式语言（SQL 子集），不再推荐 CEL。原推荐会与 Ossie 的 `requires`/`derived_by` 造成两套语言的割裂 |
 
 ---
 

@@ -254,6 +254,33 @@ e.get("on")   # → None        # 字段静默丢失
 
 ---
 
+### 发现 7：Ossie 自带表达式语言，本实现不该另立 CEL
+
+| | |
+|---|---|
+| **类型** | 🟠 **规范偏离（已修正为 `E-3` 过渡态）** |
+| **相关条款** | I4 §2.3 `E-1` ~ `E-3` |
+
+**发现**：`ossie-apache/core-spec/expression_language.md`（36 KB）定义了 Ossie 的表达式语言
+（状态 *Proposed Final*，工作组含 Snowflake / Databricks / dbt Labs / Starburst / Cube / Denodo）。
+
+**它是 SQL 的一个子集**，不是通用表达式语言，而且**对齐本体的命名空间解析**。
+
+**问题**：I4 最初推荐 CEL。但表达式出现在 Ossie 的 `requires` / `derived_by`
+与本规范的 `preconditions` / `constraints` / `effects` 中 ——
+**在同一个语义层里放两套表达式语言，是人为制造的割裂。**
+
+**处理**：
+
+- I4 §2.3 已修正为 **MUST 使用 Ossie 表达式语言**
+- 本实现（`expr.py`）仍是 CEL 子集，**标注为 `E-3` 允许的过渡态**
+- 待 Ossie 表达式语言定稿后，参考实现应迁移
+
+> **教训：在"符合的部分用 Ossie"这个原则下，先查 Ossie 有没有，再决定自己做什么。**
+> 这次的教训是**没查就推荐了外部语言**。
+
+---
+
 ## 未实现的（有意排除）
 
 | 项 | 原因 |
