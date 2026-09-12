@@ -124,7 +124,7 @@
 | 文档 | 内容 | 状态 |
 |---|---|---|
 | **[spec/module-discipline.md](spec/module-discipline.md)** | **模块纪律** —— 原子化 · C1–C4 · 构建期门禁 · 渐进披露 · 判据 · 真源与派生视图 | v0.1 |
-| **[spec/i4-action-minimal.md](spec/i4-action-minimal.md)** | **I4 动作接口** —— 单实例→多实例 · 同步 · 有审计 | v0.2.2 |
+| **[spec/i4-action-minimal.md](spec/i4-action-minimal.md)** | **I4 动作接口** —— 单实例→多实例 · 同步 · 有审计 | v0.2.3 |
 | **[spec/i3-query-minimal.md](spec/i3-query-minimal.md)** | **I3 查询接口** —— 模式查询 · 遍历 · **派生求值与 `via` 溯源** | v0.1 |
 | **[spec/i6-discovery-minimal.md](spec/i6-discovery-minimal.md)** | **I6 发现接口** —— 枚举 · 描述 · 按需查找 | v0.1 |
 
