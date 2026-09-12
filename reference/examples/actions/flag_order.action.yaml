@@ -1,0 +1,57 @@
+# 动作定义 · I4 v0.2 多实例事务示例
+#
+# 演示 v0.2 新增的能力：**一次动作原子地改多个实例**。
+#
+#   主目标   : Order
+#   附属目标 : Customer —— 沿 Order.customer 关系到达
+#
+# 两个实例的写入在同一事务内：全成或全败（§3.3 A-1 扩展到全部目标）。
+
+action:
+  name: flag_order
+  namespace: urn:sem:acme:supply
+  version: 2.0.0
+  description: 标记订单为可疑，并同时把其客户的风险等级置为高
+  ai_context: "当发现订单存在欺诈特征时使用。会同时影响该订单与其所属客户。"
+
+  target:
+    concept: Order
+    reads: [Order, Customer]
+    # ---- v0.2：附属目标 ----
+    also_write:
+      - name: customer
+        concept: Customer
+        via: customer              # 从 Order 沿 `customer` 关系到达
+
+  parameters:
+    - name: reason
+      type: CancelReason
+      required: true
+      description: 标记原因
+
+  permissions:
+    relation: can_flag
+    resource: "${target}"
+
+  preconditions:
+    - id: F1
+      expression: "target.status != 'flagged'"
+      message: "订单已被标记过"
+    # 附属目标的属性也可以参与前置条件
+    - id: F2
+      expression: "customer.risk_flag != 'high'"
+      message: "客户风险等级已经是 high"
+
+  effects:
+    # ⚠️ 字段名是 `applies_to`，不是 `on`
+    #    （YAML 1.1 会把 `on` 解析成布尔值 true，键名会丢失）
+    - applies_to: default
+      set: { path: "status", value: "'flagged'" }
+    - applies_to: customer
+      set: { path: "risk_flag", value: "'high'" }
+
+  idempotency:
+    key: "target.nr"
+
+  side_effects: []
+  async: false

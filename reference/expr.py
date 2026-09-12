@@ -12,9 +12,16 @@
     字面量        'str'  "str"  123  1.5  true  false  null
     路径          target.status        （属性引用）
     比较          ==  !=  <  <=  >  >=
+    存在性        is null   is not null      ← 缺失可选参数的显式检查
     逻辑          and  &&   or  ||   not  !
     算术/拼接     +   -              （任一侧为 str 时做拼接）
     分组          ( ... )
+
+**null 语义（I4 v0.2 §2.3 决定）**：
+    · 缺失的可选参数绑定为 `null`
+    · 与 `null` 的顺序比较（< <= > >=）返回"未知" → 前置条件判为**未通过**
+    · `==` / `!=` 正常比较
+    · 推荐用 `is null` / `is not null` 做**显式**存在性检查
 
 不支持（会明确报错，不静默通过）：
     函数调用、集合运算、三元表达式、量词、字符串方法
@@ -43,7 +50,7 @@ TOKEN_RE = re.compile(r"""
   | (?P<IDENT>[A-Za-z_][A-Za-z0-9_]*)
 """, re.VERBOSE)
 
-KEYWORDS = {"and", "or", "not", "true", "false", "null"}
+KEYWORDS = {"and", "or", "not", "true", "false", "null", "is"}
 
 
 @dataclass
@@ -158,6 +165,20 @@ class Parser:
 
     def comparison(self) -> Any:
         node = self.primary()
+
+        # `is null` / `is not null` —— 显式的存在性检查
+        # 规范依据：I4 v0.2 §2.3 决定（缺失的可选参数绑定为 null，
+        # 表达式 MUST 能用 is null 显式检查，否则一律判为未通过）
+        if self.accept_kw("is"):
+            negated = bool(self.accept_kw("not"))
+            t = self.peek()
+            if not (t.kind == "KEYWORD" and t.value == "null"):
+                raise ExpressionError(
+                    f"位置 {t.pos}: `is` 后面只能是 `null` 或 `not null`，"
+                    f"实为 {t.value!r}")
+            self.next()
+            return ("isnull", node, negated)
+
         op = self.accept_op("==", "!=", "<=", ">=", "<", ">")
         if op:
             return ("cmp", op, node, self.primary())
@@ -298,6 +319,11 @@ def evaluate(node: Any, resolver: Resolver) -> Any:
 
     if kind == "-":
         return evaluate(node[1], resolver) - evaluate(node[2], resolver)
+
+    if kind == "isnull":
+        v = evaluate(node[1], resolver)
+        result = (v is None)
+        return (not result) if node[2] else result
 
     if kind == "cmp":
         op = node[1]

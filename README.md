@@ -123,13 +123,15 @@
 
 | 文档 | 内容 | 状态 |
 |---|---|---|
-| **[spec/i4-action-minimal.md](spec/i4-action-minimal.md)** | **I4 动作接口 · 最小规范** —— 单实例 · 同步 · 无副作用 · 有审计 | v0.1.1 |
+| **[spec/i4-action-minimal.md](spec/i4-action-minimal.md)** | **I4 动作接口** —— 单实例→多实例 · 同步 · 有审计 | v0.2 |
+| **[spec/i3-query-minimal.md](spec/i3-query-minimal.md)** | **I3 查询接口** —— 模式查询 · 遍历 · **派生求值与 `via` 溯源** | v0.1 |
+| **[spec/i6-discovery-minimal.md](spec/i6-discovery-minimal.md)** | **I6 发现接口** —— 枚举 · 描述 · 按需查找 | v0.1 |
 
 ### 参考实现
 
 | 文档 | 内容 |
 |---|---|
-| **[reference/](reference/)** | I4-min 的参考实现（Python + SQLite，45 个一致性测试）<br>**主要产出是它暴露的 4 条规范缺口** |
+| **[reference/](reference/)** | 三个接口的参考实现（Python + SQLite，**89 个一致性测试**）<br>**主要产出是它暴露的 6 条规范缺口** |
 
 ### 框架与背景
 

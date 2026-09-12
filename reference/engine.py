@@ -56,6 +56,20 @@ class Precondition:
 class Effect:
     path: str
     expression: str
+    on: str = "default"          # v0.2：作用于哪个目标（默认主目标）
+
+
+@dataclass
+class TargetSpec:
+    """
+    v0.2 附属目标：从主目标出发，沿关系路径到达的另一个实例。
+
+    存在意义：一次动作常常需要**原子地**改多个实例
+    （如"取消订单"同时要改订单和它的发货单）。
+    """
+    name: str
+    concept: str
+    via: list[str]               # 从主目标出发的关系路径
 
 
 @dataclass
@@ -73,6 +87,12 @@ class ActionDef:
     description: str | None = None
     ai_context: str | None = None
     definition_hash: str = ""
+    # --- v0.2 ---
+    extra_targets: list[TargetSpec] = field(default_factory=list)
+
+    @property
+    def target_names(self) -> list[str]:
+        return ["default"] + [t.name for t in self.extra_targets]
 
     @property
     def qualified(self) -> str:
@@ -166,24 +186,74 @@ class ActionLoader:
                     "最小 I4 的 effect 只支持 `set`（改目标实例的属性）")
             s = e["set"]
             path, expr = s["path"], str(s["value"])
-            rel = model.concept(concept).relation(path)
+
+            # ⚠️ v0.2 的字段名是 `applies_to`，**不是 `on`**。
+            #    YAML 1.1 把 `on` / `off` / `yes` / `no` 解析为布尔值，
+            #    所以 `on: customer` 的键名会变成 True 而不是字符串 "on"，
+            #    导致字段静默丢失。这是格式规范必须避开的坑。
+            if "on" in e or True in e:
+                raise ActionError(
+                    "effect 使用 `on` 作为键名是**不合法的** —— "
+                    "YAML 1.1 会把 `on` 解析成布尔值 true，键名丢失。"
+                    "请改用 `applies_to`")
+            on = e.get("applies_to", "default")
+            # v0.2：on 必须指向已声明的目标
+            if on != "default" and on not in [t["name"] for t in
+                                              (target.get("also_write") or [])]:
+                raise ActionError(
+                    f"effect 的 `on: {on}` 未在 target.also_write 中声明")
+            # 作用于附属目标时，关系要在该目标的概念上校验
+            check_concept = concept
+            if on != "default":
+                for t in target.get("also_write") or []:
+                    if t["name"] == on:
+                        check_concept = t["concept"]
+                        break
+            rel = model.concept(check_concept).relation(path)
             if rel is None:
-                # 也允许写到父类声明的关系上
                 try:
-                    rel = model.find_relation(concept, path)
+                    rel = model.find_relation(check_concept, path)
                 except OssieError:
                     raise ActionError(
-                        f"effect 的 path `{path}` 不是 `{concept}` 上的关系"
+                        f"effect 的 path `{path}` 不是 `{check_concept}` 上的关系"
                     ) from None
             try:
                 compile_expr(expr)
             except ExpressionError as ex:
                 raise ActionError(
                     f"effect `{path}` 的 value 表达式非法: {ex}") from None
-            effects.append(Effect(path, expr))
+            effects.append(Effect(path, expr, on))
 
         if not effects:
             raise ActionError("`effects` 必须非空 —— 否则它不是一个动作")
+
+        # --- v0.2：附属目标 ---
+        extra: list[TargetSpec] = []
+        for t in target.get("also_write") or []:
+            tname = t.get("name")
+            tconcept = t.get("concept")
+            via = t.get("via")
+            if not tname or not tconcept or not via:
+                raise ActionError(
+                    "target.also_write 的每一项 MUST 含 name / concept / via")
+            if tname == "default":
+                raise ActionError("附属目标的 name MUST NOT 为 `default`")
+            if tname in [x.name for x in extra]:
+                raise ActionError(f"附属目标 `{tname}` 重复声明")
+            if not model.has_concept(tconcept):
+                raise ActionError(f"附属目标 `{tname}` 的概念 `{tconcept}` 未声明")
+            path = via if isinstance(via, list) else [via]
+            # via 的第一跳必须在主目标概念上存在
+            try:
+                model.find_relation(concept, path[0])
+            except OssieError:
+                raise ActionError(
+                    f"附属目标 `{tname}` 的 via 首跳 `{path[0]}` "
+                    f"不是 `{concept}` 上的关系") from None
+            extra.append(TargetSpec(name=tname, concept=tconcept, via=path))
+
+        if not extra and any(e.on != "default" for e in effects):
+            raise ActionError("使用了 `on:` 但未声明 target.also_write")
 
         return ActionDef(
             name=a["name"],
@@ -199,6 +269,7 @@ class ActionLoader:
             description=a.get("description"),
             ai_context=a.get("ai_context"),
             definition_hash="sha256:" + hashlib.sha256(raw_bytes).hexdigest(),
+            extra_targets=extra,
         )
 
 
@@ -276,10 +347,12 @@ class TargetView:
 class ActionEngine:
 
     def __init__(self, model: OssieModel, store: Store,
-                 authz: SimpleAuthz | None = None):
+                 authz: SimpleAuthz | None = None, catalog=None):
         self.model = model
         self.store = store
         self.authz = authz or SimpleAuthz()
+        # I6 目录。用于在拒绝时给出替代动作建议（见 spec/i6-discovery-minimal.md §4）
+        self.catalog = catalog
 
     # ------------------------------------------------------------------ 提交
 
@@ -342,15 +415,54 @@ class ActionEngine:
             # A-2 / R-5：先取读快照，本次提交的所有读都基于它
             read_snapshot = self.store.current_snapshot()
 
+            # ---- v0.2：解析附属目标（同一快照，保证 A-2）----
+            resolved: dict[str, str] = {"default": target}
+            for spec in action.extra_targets:
+                node, missing = target, None
+                for rel in spec.via:
+                    nxt = self.store.get_one(node, rel, read_snapshot)
+                    if nxt is None:
+                        missing = (node, rel)
+                        break
+                    node = nxt
+                if missing is not None:
+                    v = [{
+                        "id": "TARGET",
+                        "message": f"附属目标 `{spec.name}` 无法解析："
+                                   f"`{missing[0]}` 上没有关系 `{missing[1]}`",
+                        "actual": {"via": spec.via},
+                    }]
+                    result = self._reject(
+                        action, target, parameters, actor, record_id, ts,
+                        stage="target", code="AUX_TARGET_UNRESOLVED",
+                        violations=v, snapshot=read_snapshot, commit=False)
+                    self.store.write_audit(self._audit_row(
+                        action, target, parameters, actor, record_id, ts,
+                        outcome="rejected", stage="target",
+                        code="AUX_TARGET_UNRESOLVED", violations=v,
+                        snapshot=read_snapshot, applied=[],
+                        before_version=None, after_version=None))
+                    return result
+                resolved[spec.name] = node
+
             view = TargetView(self.store, self.model, target,
                               action.target_concept, read_snapshot)
-            ctx = dict(parameters)
+            # I4 v0.2 §2.3：缺失的可选参数绑定为 null（而不是"未定义"），
+            # 使表达式能用 `is null` 显式检查
+            ctx = {p.name: parameters.get(p.name) for p in action.parameters}
             ctx["target"] = view
+            for spec in action.extra_targets:
+                ctx[spec.name] = TargetView(
+                    self.store, self.model, resolved[spec.name],
+                    spec.concept, read_snapshot)
             ctx["actor"] = actor
             ctx["NOW"] = ts          # E-4：一次提交内恒定
 
             # ---------------- 阶段 6：前置条件 ----------------
             violations = []
+            missing_optional = sorted(
+                p.name for p in action.parameters
+                if not p.required and parameters.get(p.name) is None)
             for pre in action.preconditions:
                 try:
                     ok = evaluate(compile_expr(pre.expression),
@@ -371,6 +483,9 @@ class ActionEngine:
                     }
                     if view.reads:
                         v["actual"] = dict(view.reads)
+                    if missing_optional:
+                        # null 参与求值 → 判为未通过（而不是静默放行）
+                        v["null_parameters"] = missing_optional
                     violations.append(v)
 
             if violations:
@@ -415,6 +530,7 @@ class ActionEngine:
             # ---------------- 阶段 8：应用效果 ----------------
             write_snapshot = self.store.bump_snapshot()
             applied = []
+            written: dict[str, str] = {}        # 实例 → 概念（用于版本号）
             for eff in action.effects:
                 try:
                     value = evaluate(compile_expr(eff.expression),
@@ -423,7 +539,15 @@ class ActionEngine:
                     raise ActionError(
                         f"effect `{eff.path}` 求值失败: {e}") from e
 
-                rel = self.model.find_relation(action.target_concept, eff.path)
+                # v0.2：效果可作用于附属目标
+                inst = resolved[eff.on]
+                if eff.on == "default":
+                    eff_concept = action.target_concept
+                else:
+                    eff_concept = next(t.concept for t in action.extra_targets
+                                       if t.name == eff.on)
+
+                rel = self.model.find_relation(eff_concept, eff.path)
                 vc = rel.value_concept
                 is_entity = (vc and self.model.has_concept(vc)
                              and self.model.concept(vc).is_entity)
@@ -437,17 +561,24 @@ class ActionEngine:
                 single_valued = rel.multiplicity in ("ManyToOne", "OneToOne")
 
                 self.store.set_fact(
-                    target, eff.path, obj, kind, write_snapshot,
+                    inst, eff.path, obj, kind, write_snapshot,
                     single_valued=single_valued,
                     source=f"action:{action.qualified_versioned}")
 
+                written[inst] = eff_concept
                 applied.append({
+                    "on": eff.on,
+                    "instance": inst,
                     "path": eff.path,
                     "value": value if not is_entity else str(value),
                     "multiplicity": rel.multiplicity or "unconstrained",
                 })
 
-            after_version = self.store.bump_version(target)
+            # v0.2：所有被写入的实例都升版本（原子性覆盖全部目标）
+            versions = {}
+            for inst in sorted(written):
+                versions[inst] = self.store.bump_version(inst)
+            after_version = versions.get(target, self.store.get_version(target))
 
             # ---------------- 阶段 9：写审计（R-1，同事务） ----------------
             self.store.write_audit(self._audit_row(
@@ -461,9 +592,11 @@ class ActionEngine:
                 "outcome": "succeeded",
                 "action": action.qualified_versioned,
                 "target": target,
+                "targets": resolved,
                 "record_id": record_id,
                 "applied": applied,
                 "new_version": after_version,
+                "versions": versions,
                 "snapshot": read_snapshot,
             }
 
@@ -542,7 +675,7 @@ class ActionEngine:
             "action": action.qualified_versioned,
             "target": target,
             "violations": violations,
-            "suggestions": self._suggestions(stage),
+            "suggestions": self._suggestions(stage, action, target, actor),
             "retryable": stage == "conflict",
             "record_id": record_id,
         }
@@ -555,14 +688,44 @@ class ActionEngine:
                 before_version=None, after_version=None))
         return result
 
-    @staticmethod
-    def _suggestions(stage: str) -> list[dict]:
+    def _suggestions(self, stage: str, action: ActionDef, target: str,
+                     actor: str) -> list[dict]:
         """
-        最小实现不产生具体建议 —— 规范 §4.2 里 suggestions 是可选。
-        真实实现应在此查本体找替代动作。
-        保留该方法是为了标明这是**已知的、有意的空缺**，不是遗漏。
+        替代动作建议。
+
+        **I4 v0.2 §4.2（解决原 I4-min 的发现 4）**：
+        替代动作建议的职责归 **I6**，不归 I4。
+
+        - 若未注入 catalog → 返回空列表（规范 F-7：调用方 MUST NOT 依赖它存在）
+        - 若已注入 → 调 `FindByCapability` 查**同一概念上的其他动作**，
+          并**标注来源**（F-8）
         """
-        return []
+        if self.catalog is None:
+            return []
+        # 只有"前置条件失败"和"权限失败"才值得找替代动作；
+        # 参数写错、目标不存在、版本冲突都应先修正原动作
+        if stage not in ("precondition", "permission"):
+            return []
+        need = action.description or action.name
+        try:
+            matches = self.catalog.find_by_capability(
+                need, actor=actor, concept=action.target_concept, limit=6)
+        except Exception:
+            return []
+        out = []
+        for m in matches:
+            if m["qualified"] == action.qualified:
+                continue                      # 排除自己
+            out.append({
+                "action": m["qualified"],
+                "reason": m.get("description") or "",
+                "score": m["score"],
+                "matched_on": m["matched_on"],
+                "via": "i6.FindByCapability",      # F-8：必须标注来源
+            })
+            if len(out) == 3:
+                break
+        return out
 
     def _audit_row(self, action: ActionDef, target: str, params: dict,
                    actor: str, record_id: str, ts: str, *, outcome: str,

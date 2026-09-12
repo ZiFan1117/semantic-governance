@@ -81,7 +81,10 @@ class Base(unittest.TestCase):
 class TestOssieModel(Base):
 
     def test_loads_all_concepts(self):
-        self.assertEqual(len(self.model.concepts), 7)
+        self.assertEqual(
+            set(self.model.concepts),
+            {"Order", "Customer", "OrderNr", "CustomerId",
+             "OrderStatus", "Money", "CancelReason", "RiskLevel"})
         self.assertTrue(self.model.concept("Order").is_entity)
         self.assertTrue(self.model.concept("Money").is_value)
 

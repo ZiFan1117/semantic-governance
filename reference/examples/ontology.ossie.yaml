@@ -31,7 +31,17 @@ ontology:
     extends: [String]
     description: 订单状态。取值受 requires 约束
     requires:
-      - "OrderStatus == 'pending' or OrderStatus == 'shipped' or OrderStatus == 'cancelled'"
+      - >-
+        OrderStatus == 'pending' or OrderStatus == 'shipped'
+        or OrderStatus == 'cancelled' or OrderStatus == 'returning'
+        or OrderStatus == 'flagged'
+
+  - concept: RiskLevel
+    type: ValueType
+    extends: [String]
+    description: 风险等级
+    requires:
+      - "RiskLevel == 'low' or RiskLevel == 'medium' or RiskLevel == 'high'"
 
   - concept: Money
     type: ValueType
@@ -51,7 +61,7 @@ ontology:
 
   - concept: Customer
     type: EntityType
-    description: 客户
+    description: 客户（可能是集团，有股权层级）
     identify_by: [cid]
     relationships:
       - name: cid
@@ -60,6 +70,36 @@ ontology:
         multiplicity: OneToOne
         verbalizes:
           - "{Customer} is identified by {CustomerId}"
+
+      # --- 直接持股 ---
+      - name: holds
+        roles:
+          - concept: Customer
+            name: held
+        multiplicity: ManyToOne
+        verbalizes:
+          - "{Customer} holds {Customer:held}"
+
+      # --- 风险标记（多实例动作会写它）---
+      - name: risk_flag
+        roles:
+          - concept: RiskLevel
+        multiplicity: ManyToOne
+        verbalizes:
+          - "{Customer} has risk level {RiskLevel}"
+
+      # --- 穿透持股（派生，传递闭包）---
+      # 这是 Ossie `derived_by` 的示例用法：base case + recursive case。
+      # 与 OWL 的 `TransitiveProperty` 不同 —— Ossie 用**规则**而非**公理**表达传递性。
+      - name: holds_transitively
+        roles:
+          - concept: Customer
+            name: held
+        verbalizes:
+          - "{Customer} transitively holds {Customer:held}"
+        derived_by:
+          - "Customer.holds(held)"
+          - "Customer.holds_transitively.holds(held)"
 
   - concept: Order
     type: EntityType

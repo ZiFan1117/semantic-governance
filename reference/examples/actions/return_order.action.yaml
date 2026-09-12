@@ -1,0 +1,51 @@
+# 动作定义 · I4-min 参考实现示例（第二个动作）
+#
+# 存在意义：
+#   ① 让 I6 的 FindByCapability 能验证**排序**（只有 1 个动作时无法验证）
+#   ② 让"拒绝后改选"的 Agent 自纠流程成立（见 spec/i6-discovery-minimal.md §4.3）
+#      cancel_order 在已发货订单上被拒 → 应能查到 return_order
+
+action:
+  name: return_order
+  namespace: urn:sem:acme:supply
+  version: 1.0.0
+  description: 对已发货订单发起退货
+  ai_context: "当订单已发货但客户要求退回时使用。仅对 status=shipped 的订单有效。"
+
+  target:
+    concept: Order
+    reads: [Order]
+
+  parameters:
+    - name: reason
+      type: CancelReason
+      required: true
+      description: 退货原因
+    - name: return_fee
+      type: Money
+      required: true
+      description: 退货手续费
+      constraints:
+        - "return_fee >= 0.0"
+
+  permissions:
+    relation: can_return
+    resource: "${target}"
+
+  preconditions:
+    - id: R1
+      expression: "target.status == 'shipped'"
+      message: "只有已发货订单可以退货"
+    - id: R2
+      expression: "return_fee <= target.paid_amount"
+      message: "退货手续费不能超过已付金额"
+
+  effects:
+    - set: { path: "status", value: "'returning'" }
+    - set: { path: "cancel_reason", value: "reason" }
+
+  idempotency:
+    key: "target.nr + ':' + reason + ':' + return_fee"
+
+  side_effects: []
+  async: false

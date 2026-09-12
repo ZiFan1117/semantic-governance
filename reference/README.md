@@ -36,14 +36,23 @@ python reference/tests/test_i4_min.py
 reference/
 ├── ossie_model.py      Ossie 本体加载 + 自检        ← L3 / I1
 ├── store.py            事实层（SQLite + 快照读）      ← L2 / I2
-├── expr.py             表达式求值（CEL 子集）         ← 规范 §2.3
-├── engine.py           I4 动作引擎（10 个阶段）       ← L5 / I4
+├── expr.py             表达式求值（CEL 子集 + is null） ← 规范 §2.3
+├── engine.py           I4 动作引擎（10 个阶段 + 多实例）← L5 / I4
+├── query.py            I3 查询与派生（derived_by + via）← L4 / I3
+├── discovery.py        I6 发现（目录 + 按需查找）      ← I6
 ├── demo.py             端到端演示
 ├── examples/
-│   ├── ontology.ossie.yaml            Ossie 本体定义
-│   └── actions/cancel_order.action.yaml  动作定义
-└── tests/test_i4_min.py   45 个一致性测试
+│   ├── ontology.ossie.yaml               Ossie 本体（含 derived_by 规则）
+│   └── actions/                         三个动作定义
+│       ├── cancel_order.action.yaml     单实例
+│       ├── return_order.action.yaml     单实例（供"改选"场景）
+│       └── flag_order.action.yaml       多实例（v0.2）
+└── tests/
+    ├── test_i4_min.py      45 个测试
+    └── test_i3_i6_min.py   44 个测试
 ```
+
+**共 89 个测试，全绿。**
 
 ---
 
@@ -51,12 +60,14 @@ reference/
 
 | 框架的层 | 本实现 | 用了什么标准/技术 |
 |---|---|---|
-| **L3 语义定义**（I1） | `ossie_model.py` + `examples/ontology.ossie.yaml` | ✅ **Apache Ossie YAML** |
+| **L3 语义定义**（I1） | `ossie_model.py` + `ontology.ossie.yaml` | ✅ **Apache Ossie YAML** |
 | **L2 事实**（I2） | `store.py`（SQLite） | 最小实现（框架 §23 建议 Postgres） |
+| **L4 查询**（I3） | `query.py` | ⭐ **首次实现 Ossie 的 `derived_by`** |
 | **L5 动作**（I4） | `engine.py` | ⭐ **本框架的原创部分** |
+| **I6 发现** | `discovery.py` | ⭐ **本框架的原创部分** |
 | 授权 | `SimpleAuthz`（Zanzibar 风格元组） | 生产应换 OpenFGA |
 | 审计 | `store.audit` 表 | 字段按规范 §5 |
-| 表达式 | `expr.py`（CEL 子集） | 规范 E-2 的最低能力 |
+| 表达式 | `expr.py`（CEL 子集） | 规范 E-2 的最低能力 + `is null` |
 
 **"符合的部分用 Ossie"** —— 概念、关系、值类型、约束（`requires`）、标识（`identify_by`）
 全部走 Ossie 格式，且 `ActionLoader` 会校验动作定义对 Ossie 概念的引用（规范 `D-1`）。
@@ -190,6 +201,56 @@ reference/
 **建议**：把"替代动作建议"归入 **I6 发现**的职责，而不是 I4 的可选字段。
 即：`suggestions` 保持可选，但 **I6 MUST 提供"按需求找能力"**，
 让 Agent 自己完成改选。
+
+---
+
+### 发现 5：YAML 1.1 把 `on` 解析成布尔值 —— 字段名陷阱
+
+| | |
+|---|---|
+| **类型** | 🔴 **格式陷阱（实际踩到）** |
+| **相关条款** | I4 v0.2 **`M-8`** |
+
+**现象**：多实例事务最初用 `on:` 指定效果的作用目标：
+
+```yaml
+effects:
+  - on: customer        # ← 灾难
+    set: { path: "risk_flag", value: "'high'" }
+```
+
+**PyYAML（遵循 YAML 1.1）把 `on` 解析为布尔值 `true`。**
+于是这个 effect 的键名**根本不是字符串 `"on"`**，而是 `True`：
+
+```python
+e.get("on")   # → None        # 字段静默丢失
+```
+
+**后果：不报错，只是不生效。** 效果被作用到了错误的目标，或者根本没指定。
+这类"静默失效"比报错危险得多。
+
+**修法**：字段名改为 **`applies_to`**；同时加载器**显式拒绝** `on` 并给出解释（不让人再踩）。
+
+> **教训：YAML 格式的规范 MUST 禁用 `on` / `off` / `yes` / `no` 作为字段名。**
+> JSON 没这个问题（只有 `true`/`false`），但 Ossie 系列规范都用 YAML。
+
+---
+
+### 发现 6：ABox 缺少类型断言，派生规则无法定位主语
+
+| | |
+|---|---|
+| **类型** | 🟠 规范缺口 |
+| **相关** | Ossie 的 `ontology mappings` vs 运行时 |
+
+**现象**：实现 `derived_by` 求值时，需要知道"哪些实例属于概念 C"以限定主语范围。
+
+但 Ossie 只用 `ontology mappings` 描述**静态的"物理字段 → 概念"映射**，
+**没有定义运行时的类型断言**（"这个实例属于哪个概念"）。
+
+本实现引入保留关系 `__concept`。**但这应该是规范的一部分，而不是每个实现自己发明。**
+
+**建议**：在 I1/I2 规范里明确运行时类型断言的表示与写入时机。
 
 ---
 

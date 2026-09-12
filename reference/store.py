@@ -199,6 +199,38 @@ class Store:
             """, (kind,)).fetchall()
         return [r["subject"] for r in rows]
 
+    # -------------------------------------------------- 类型断言
+    # ⚠️ 参考实现暴露的规范缺口：
+    #    Ossie 用 `ontology mappings` 描述"物理字段 → 概念"的映射，
+    #    但**没有定义运行时的类型断言**（"这个实例属于哪个概念"）。
+    #    派生规则的求值需要它来限定主语范围，所以本实现引入保留关系
+    #    `__concept`。这应写进 L3/I1 的规范，而不是每个实现自己发明。
+
+    RESERVED_CONCEPT_RELATION = "__concept"
+
+    def set_concept(self, instance: str, concept: str, snapshot: int,
+                    source: str | None = None) -> None:
+        """断言一个实例所属的概念。"""
+        self.set_fact(instance, self.RESERVED_CONCEPT_RELATION, concept,
+                      "literal", snapshot, single_valued=True, source=source)
+
+    def concept_of(self, instance: str,
+                   snapshot: int | None = None) -> str | None:
+        return self.get_one(instance, self.RESERVED_CONCEPT_RELATION, snapshot)
+
+    def instances_of_concept(self, concept: str,
+                             snapshot: int | None = None) -> list[str]:
+        at = self.current_snapshot() if snapshot is None else snapshot
+        rows = self.conn.execute(
+            """
+            SELECT subject FROM facts
+             WHERE relation = ? AND object = ?
+               AND valid_from <= ?
+               AND (valid_to IS NULL OR valid_to > ?)
+             ORDER BY subject
+            """, (self.RESERVED_CONCEPT_RELATION, concept, at, at)).fetchall()
+        return [r["subject"] for r in rows]
+
     def exists(self, instance: str, snapshot: int | None = None) -> bool:
         at = self.current_snapshot() if snapshot is None else snapshot
         row = self.conn.execute(
