@@ -123,7 +123,13 @@
 
 | 文档 | 内容 | 状态 |
 |---|---|---|
-| **[spec/i4-action-minimal.md](spec/i4-action-minimal.md)** | **I4 动作接口 · 最小规范** —— 单实例 · 同步 · 无副作用 · 有审计 | v0.1 草案 |
+| **[spec/i4-action-minimal.md](spec/i4-action-minimal.md)** | **I4 动作接口 · 最小规范** —— 单实例 · 同步 · 无副作用 · 有审计 | v0.1.1 |
+
+### 参考实现
+
+| 文档 | 内容 |
+|---|---|
+| **[reference/](reference/)** | I4-min 的参考实现（Python + SQLite，45 个一致性测试）<br>**主要产出是它暴露的 4 条规范缺口** |
 
 ### 框架与背景
 

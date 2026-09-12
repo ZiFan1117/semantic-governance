@@ -1,0 +1,57 @@
+# 动作定义 · I4-min 参考实现示例
+#
+# 遵循 spec/i4-action-minimal.md §2 的描述格式。
+#
+# ⚠️ 关键设计：Ossie 不定义动作。
+#    本文件是**独立**的动作定义，通过 concept 名**引用** Ossie 本体。
+#    引用关系见 target.concept / target.reads / parameters[].type。
+
+action:
+  name: cancel_order
+  namespace: urn:sem:acme:supply
+  version: 1.2.0
+  description: 取消一个尚未发货的订单
+  ai_context: "当客户要求取消订单时使用。仅对 status=pending 的订单有效；退款金额不得超过已付金额。"
+
+  # 作用对象：引用 Ossie 的本体定义
+  target:
+    concept: Order              # MUST 在 ontology.ossie.yaml 中已声明
+    reads: [Order, Customer]
+
+  parameters:
+    - name: reason
+      type: CancelReason        # 引用 Ossie 的 ValueType
+      required: true
+      description: 取消原因
+    - name: refund_amount
+      type: Money               # 引用 Ossie 的 ValueType
+      required: true
+      description: 退款金额
+      constraints:
+        - "refund_amount >= 0.0"
+
+  # 权限：引用外部授权系统（本参考实现用最小内置实现，见 engine.py）
+  permissions:
+    relation: can_cancel
+    resource: "${target}"
+
+  preconditions:
+    - id: P1
+      expression: "target.status == 'pending'"
+      message: "只有待处理订单可以取消"
+    - id: P2
+      expression: "refund_amount <= target.paid_amount"
+      message: "退款金额不能超过已付金额"
+
+  # 效果：最小 I4 只允许 set（改目标实例的属性）
+  effects:
+    - set: { path: "status", value: "'cancelled'" }
+    - set: { path: "cancel_reason", value: "reason" }
+    - set: { path: "refunded_amount", value: "refund_amount" }
+
+  idempotency:
+    key: "target.nr + ':' + reason + ':' + refund_amount"
+
+  # 最小 I4 排除项（MUST 保持为空 / false）
+  side_effects: []
+  async: false

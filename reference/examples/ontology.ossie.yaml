@@ -1,0 +1,115 @@
+# Apache Ossie 本体定义 · I4-min 参考实现示例
+#
+# 本文件严格遵循 Ossie 本体规范（ontology/ontology.md, v0.2.0.dev0）
+# https://github.com/apache/ossie/blob/main/ontology/ontology.md
+#
+# 这一层就是框架里的 L3（TBox 的载体），对应接口 I1。
+# 动作定义不在本文件里 —— Ossie 不管动作，见 ../actions/cancel_order.action.yaml
+
+name: SupplyOntology
+description: 供应链订单场景的示例本体
+ai_context: "订单取消场景。Order 有状态与已付金额；取消需要校验状态与退款上限。"
+
+ontology:
+
+  # ============================================================
+  # 值类型（ValueType）
+  # ============================================================
+
+  - concept: OrderNr
+    type: ValueType
+    extends: [String]
+    description: 订单编号
+
+  - concept: CustomerId
+    type: ValueType
+    extends: [String]
+    description: 客户编号
+
+  - concept: OrderStatus
+    type: ValueType
+    extends: [String]
+    description: 订单状态。取值受 requires 约束
+    requires:
+      - "OrderStatus == 'pending' or OrderStatus == 'shipped' or OrderStatus == 'cancelled'"
+
+  - concept: Money
+    type: ValueType
+    extends: [Decimal]
+    description: 金额（非负）
+    requires:
+      - "Money >= 0.0"
+
+  - concept: CancelReason
+    type: ValueType
+    extends: [String]
+    description: 取消原因
+
+  # ============================================================
+  # 实体类型（EntityType）
+  # ============================================================
+
+  - concept: Customer
+    type: EntityType
+    description: 客户
+    identify_by: [cid]
+    relationships:
+      - name: cid
+        roles:
+          - concept: CustomerId
+        multiplicity: OneToOne
+        verbalizes:
+          - "{Customer} is identified by {CustomerId}"
+
+  - concept: Order
+    type: EntityType
+    description: 订单
+    identify_by: [nr]
+    relationships:
+
+      # --- 标识 ---
+      - name: nr
+        roles:
+          - concept: OrderNr
+        multiplicity: OneToOne
+        verbalizes:
+          - "{Order} is identified by {OrderNr}"
+
+      # --- 归属 ---
+      - name: customer
+        roles:
+          - concept: Customer
+        multiplicity: ManyToOne
+        verbalizes:
+          - "{Order} belongs to {Customer}"
+
+      # --- 状态 ---
+      - name: status
+        roles:
+          - concept: OrderStatus
+        multiplicity: ManyToOne
+        verbalizes:
+          - "{Order} has status {OrderStatus}"
+
+      # --- 金额 ---
+      - name: paid_amount
+        roles:
+          - concept: Money
+        multiplicity: ManyToOne
+        verbalizes:
+          - "{Order} has paid {Money}"
+
+      - name: refunded_amount
+        roles:
+          - concept: Money
+        multiplicity: ManyToOne
+        verbalizes:
+          - "{Order} refunded {Money}"
+
+      # --- 取消信息（取消后才有）---
+      - name: cancel_reason
+        roles:
+          - concept: CancelReason
+        multiplicity: ManyToOne
+        verbalizes:
+          - "{Order} was cancelled because {CancelReason}"
