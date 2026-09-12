@@ -119,12 +119,27 @@
 
 ## 文档
 
+### 规范（Normative）
+
+| 文档 | 内容 | 状态 |
+|---|---|---|
+| **[spec/i4-action-minimal.md](spec/i4-action-minimal.md)** | **I4 动作接口 · 最小规范** —— 单实例 · 同步 · 无副作用 · 有审计 | v0.1 草案 |
+
+### 框架与背景
+
 | 文档 | 内容 |
 |---|---|
 | **[docs/framework.md](docs/framework.md)** | **主体**：理念、治理、概念模型、分层、六个接口、合规等级、规范条款 |
 | [docs/rationale.md](docs/rationale.md) | **背景分析**：为什么这么设计——与知识图谱/Palantir 的对比、约束与推理机制、语义网失败的教训 |
+| [docs/open-questions/](docs/open-questions/) | 9 条开放问题的逐条展开（对应 Issues） |
+
+### 参与
+
+| 文档 | 内容 |
+|---|---|
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 变更提案流程（本框架自己要求提案制，所以这里以身作则） |
 | [proposals/](proposals/) | 变更提案 |
+| [Issues](https://github.com/ZiFan1117/semantic-governance/issues) | 开放问题讨论 |
 
 ---
 
