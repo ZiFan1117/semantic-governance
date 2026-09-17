@@ -282,10 +282,10 @@ class SimpleAuthz:
     最小授权引擎。
 
     ⚠️ 这不是本规范的一部分 —— 规范只要求"必须校验权限"，
-       并把权限模型交给外部（框架 §13.5 推荐 OpenFGA）。
+       并把权限模型交给外部（框架 §18.5 推荐 OpenFGA）。
 
     本实现用 Zanzibar 风格的 (subject, relation, object) 元组，
-    因为它与 Ossie 的 concept/relationship 天然同构（框架 §13.6）。
+    因为它与 Ossie 的 concept/relationship 天然同构（框架 §18.6）。
     """
 
     def __init__(self) -> None:
@@ -557,7 +557,7 @@ class ActionEngine:
                 else:
                     obj, kind = _literal(value), "literal"
 
-                # I2-G1：写入路径上强制 multiplicity 约束
+                # I2-1：写入路径上强制 multiplicity 约束
                 single_valued = rel.multiplicity in ("ManyToOne", "OneToOne")
 
                 self.store.set_fact(

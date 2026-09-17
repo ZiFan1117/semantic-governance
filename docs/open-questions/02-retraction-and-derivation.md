@@ -4,7 +4,7 @@
 |---|---|
 | **类型** | 🐛 设计冲突 |
 | **严重度** | 高 |
-| **关联章节** | `docs/framework.md` §24.2 第 2 条 |
+| **关联章节** | `docs/framework.md` §28.2 第 2 条 |
 
 ---
 
@@ -72,4 +72,4 @@ A → B → C → A
 
 ---
 
-*本 Issue 对应 `docs/framework.md` §24.2 第 2 条*
+*本 Issue 对应 `docs/framework.md` §28.2 第 2 条*

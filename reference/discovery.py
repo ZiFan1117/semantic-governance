@@ -4,7 +4,7 @@ I6 发现接口 —— 最小实现。
 实现 spec/i6-discovery-minimal.md。
 
 关键点：**目录不是手写的，是从 Ossie 本体 + 动作定义自动生成的。**
-这保证了发现结果与 L3 的定义永不脱节（框架 I1-G1『定义不可变』的延伸）。
+这保证了发现结果与 L3 的定义永不脱节（框架 I1-2『可自检』的延伸）。
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ class ActionRegistry:
 
 
 # --------------------------------------------------------------------------
-# 权限过滤（I6-G2）
+# 权限过滤（I3-3 / I6-3）
 # --------------------------------------------------------------------------
 
 CapabilityFilter = Callable[[str, str], bool]
@@ -87,7 +87,7 @@ class Catalog:
                       kind: str | None = None,
                       domain: str | None = None,
                       keyword: str | None = None) -> list[dict[str, Any]]:
-        """I6-G1 / G4：可完整枚举，顺序确定。"""
+        """I6-1：可完整枚举（顺序确定由 §15 保证 G4 承担）。"""
         out = []
         for name in sorted(self.model.concepts):
             c = self.model.concepts[name]

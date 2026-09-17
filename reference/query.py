@@ -5,7 +5,7 @@ I3 查询接口 —— 最小实现。
 
 本模块首次实现 Ossie 的 `derived_by`：
   · 路径型表达式   <概念>.<关系1>[.<关系2>...](<角色名>)
-  · 前向链到不动点（框架 §14）
+  · 前向链到不动点（框架 §19）
   · 每条派生事实带 `via` 溯源（规范 D-2 / 框架 A-4）
 
 不支持的形式（布尔组合/比较/聚合）**会明确报错**，不静默忽略（规范 D-3）。
@@ -155,7 +155,7 @@ FactFilter = Callable[[str, str, str, str], bool]
 
 
 def visible_all(actor: str, subject: str, relation: str, obj: str) -> bool:
-    """⚠️ 默认放行一切。生产 MUST 注入真实过滤器（I3-G3）。"""
+    """⚠️ 默认放行一切。生产 MUST 注入真实过滤器（I3-3）。"""
     return True
 
 
@@ -235,7 +235,7 @@ class QueryEngine:
                 return derived
         raise DerivationLimitExceeded(
             f"派生求值超过 {MAX_ITERATIONS} 轮仍未收敛。"
-            f"这通常意味着递归规则不终止（框架 §14）")
+            f"这通常意味着递归规则不终止（框架 §19）")
 
     def _walk(self, start: str, path: list[str],
               index: dict[str, list[FactRef]]

@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS facts (
 CREATE INDEX IF NOT EXISTS idx_facts_subject
     ON facts(subject, relation, valid_from);
 
--- 触发本表的动作（用于 I2-G2『写入必须带来源』）
+-- 触发本表的动作（用于 I2-3『写入必须带来源』）
 CREATE TABLE IF NOT EXISTS versions (
     instance TEXT PRIMARY KEY,
     version  INTEGER NOT NULL DEFAULT 0
@@ -260,12 +260,12 @@ class Store:
         """
         写入一条事实，**并在写入路径上强制 multiplicity 约束**。
 
-        规范依据：框架 I2-G1『写入必须过约束』。
+        规范依据：框架 I2-1『写入必须过规则』。
 
         ⚠️ 这是参考实现暴露出的一个真实教训：
            最初的实现把 multiplicity 只在**读取时**检查，
            结果是「脏数据能写进去，读取时才炸」——
-           正好违反了 I2-G1 的立意。约束必须在写入路径上。
+           正好违反了 I2-1 的立意。规则必须在写入路径上。
 
         single_valued=True  单值关系（Ossie 的 ManyToOne / OneToOne）
                             → 旧值在 snapshot 处失效，新值生效
