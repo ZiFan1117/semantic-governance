@@ -3,7 +3,7 @@
 | 字段 | 值 |
 |---|---|
 | **类型** | 💬 讨论 |
-| **关联章节** | `docs/framework.md` §1.1、§24.2 第 7 条 |
+| **关联章节** | `docs/framework.md` §1.1、§28.2 第 7 条 |
 
 ---
 
@@ -68,4 +68,4 @@
 
 ---
 
-*本 Issue 对应 `docs/framework.md` §24.2 第 7 条*
+*本 Issue 对应 `docs/framework.md` §28.2 第 7 条*

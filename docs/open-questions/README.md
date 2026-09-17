@@ -1,7 +1,7 @@
 # 开放问题
 
 > 本目录是框架尚未解决问题的**逐条展开**。
-> 摘要见 [`../framework.md`](../framework.md) §24。
+> 摘要见 [`../framework.md`](../framework.md) §28。
 >
 > **每一条都可以在仓库 Issues 里讨论。** 提变更提案请用 [`../../proposals/0000-template.md`](../../proposals/0000-template.md)。
 

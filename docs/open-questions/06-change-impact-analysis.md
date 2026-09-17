@@ -96,4 +96,4 @@
 
 ---
 
-*本 Issue 对应 `docs/framework.md` §24.2 第 6 条*
+*本 Issue 对应 `docs/framework.md` §28.2 第 6 条*
