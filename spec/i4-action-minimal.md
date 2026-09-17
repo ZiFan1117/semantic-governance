@@ -593,7 +593,7 @@ return { slots: [], rejection: parsed, note: summarize(parsed) }
 | 组 | 条款 |
 |---|---|
 | **定义** | DF-1 定义 MUST 引用 L3 中已声明的概念<br>DF-2 `effects` MUST NOT 为空<br>DF-3 `side_effects` MUST 为空数组，`async` MUST 为 false |
-| **表达式** | EX-1 声明所用语言 · EX-2 最低能力 · EX-3 SHOULD 用 CEL<br>EX-4 同一次提交内 `NOW()` MUST 恒定 |
+| **表达式** | EX-1 声明所用语言 · EX-2 最低能力 · EX-3 其他语言仅作过渡（**MAY**，须标注偏离）<br>EX-4 同一次提交内 `NOW()` MUST 恒定 |
 | **阶段** | ST-1 顺序 MUST 固定，**权限早于前置条件**<br>ST-2 前置条件 MUST 同快照<br>ST-3 参数校验失败 MUST NOT 读取目标 |
 | **原子性** | AT-1 阶段 6~9 同事务 · AT-2 同快照 · AT-3 快照进审计 · AT-4 不部分生效 |
 | **幂等** | ID-1 调用方 MUST 提供键 · ID-2 重复 MUST 返回原结果 · ID-3 作用域 MUST 足够 · ID-4 保留期 MUST 声明 |
@@ -696,7 +696,7 @@ SubmitAction(
 | 等级 | 要求 |
 |---|---|
 | **I4-min/Core** | 全部 MUST 条款 |
-| **I4-min/Plus** | Core + 全部 SHOULD（CEL、`actual` 值、建议、CloudEvents） |
+| **I4-min/Plus** | Core + 全部 SHOULD（`actual` 值、建议、CloudEvents；**不含 CEL**——见 `EX-3`） |
 
 **验收方法**：框架 §24.1 的"**该被拒绝的样本集**"。
 
@@ -731,7 +731,7 @@ SubmitAction(
 | # | 断言 | 期望 |
 |---|---|---|
 | 12 | 取实现返回的 `outcome` 字面量，与 §4 比对 | 恰好是 `succeeded` / `rejected` / `failed` |
-| 13 | 用同参数提交两次，取审计记录 | 两条记录、`record_id` 相同、第二条 `replayed: true`（`RP-1`/`RP-2`） |
+| 13 | 用同参数提交两次，取审计记录 | 两条记录、`record_id` **不同**、第二条 `replayed: true`，且两条的 `change_record_id` **相同**（`RP-1`/`RP-2`/`RP-3`） |
 | 14 | 送一条**只违反参数约束**、且该规则同时被写成判据的样本 | 拒绝发生在 `stage: parameter`；若实现把它写成判据，说明存在两处真源（`BD-5`） |
 
 ---

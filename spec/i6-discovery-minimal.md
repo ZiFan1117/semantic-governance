@@ -59,6 +59,7 @@
 
 | 操作 | 输入 | 输出 |
 |---|---|---|
+| `ListDomains` | — | **域列表**（`I6-G1` 要求"域可被完整列出"） |
 | `ListConcepts` | 可选过滤条件 | 概念列表（简） |
 | `GetConceptDetail` | 概念名 | 概念完整信息（含关系、约束） |
 | `ListActions` | 可选：概念名 | 动作列表（简） |
@@ -271,9 +272,9 @@ Agent 会当真，然后执行错误的动作。**空结果至少是可解释的
 
 | # | 条款 |
 |---|---|
-| **FC-7** | I4 的 `suggestions` **MAY** 为空 —— 调用方 **MUST NOT** 依赖它存在 |
-| **FC-8** | 实现 **MAY** 在 I4 的拒绝里内联 I6 的查询结果；若如此，`suggestions` 的每一项 **MUST** 标注其来源（`via: i6.FindByCapability`） |
-| **FC-9** | 调用方在收到 `stage=precondition` 或 `stage=permission` 的拒绝后，**SHOULD** 用 `FindByCapability` 主动查找替代能力 |
+| **FC-11** | I4 的 `suggestions` **MAY** 为空 —— 调用方 **MUST NOT** 依赖它存在 |
+| **FC-12** | 实现 **MAY** 在 I4 的拒绝里内联 I6 的查询结果；若如此，`suggestions` 的每一项 **MUST** 标注其来源（`via: i6.FindByCapability`） |
+| **FC-13** | 调用方在收到 `stage=precondition` 或 `stage=permission` 的拒绝后，**SHOULD** 用 `FindByCapability` 主动查找替代能力 |
 
 ### 4.3 Agent 的完整自纠流程
 
@@ -301,9 +302,9 @@ Agent 会当真，然后执行错误的动作。**空结果至少是可解释的
 | 组 | 条款 |
 |---|---|
 | **枚举** | EN-1 `ListConcepts` / `ListActions` MUST 可完整枚举（分页可）<br>EN-2 `DescribeAction` MUST 返回足以构造提交请求的完整契约 |
-| **发现** | FC-1 支持按概念筛选 · FC-2 支持关键词匹配 · **FC-3 MUST 给 matched_on**<br>FC-4 匹配方法 MUST 声明 · FC-5 SHOULD 支持语义检索 · **FC-6 无匹配 MUST 返回空**<br>**FC-7 适用/排除语境 MUST 分开存 · FC-8 命中排除条件 MUST 减分 · FC-9 evidence MUST 标语境 · FC-10 净分非正 MUST NOT 返回** |
+| **发现** | FC-1 支持按概念筛选 · FC-2 支持关键词匹配 · **FC-3 MUST 给 matched_on**<br>FC-4 匹配方法 MUST 声明 · FC-5 SHOULD 支持语义检索 · **FC-6 无匹配 MUST 返回空**<br>**FC-11 适用/排除语境 MUST 分开存 · FC-12 命中排除条件 MUST 减分 · FC-13 evidence MUST 标语境 · FC-10 净分非正 MUST NOT 返回** |
 | **保证** | G1 可枚举 · G2 权限过滤 · G3 自描述 · G4 确定性 · G5 无副作用 |
-| **与 I4** | FC-7 调用方 MUST NOT 依赖 suggestions 存在<br>FC-8 内联时 MUST 标注来源 · FC-9 SHOULD 主动查替代 |
+| **与 I4** | FC-11 调用方 MUST NOT 依赖 suggestions 存在<br>FC-12 内联时 MUST 标注来源 · FC-13 SHOULD 主动查替代 |
 
 ---
 
@@ -330,6 +331,7 @@ Agent 会当真，然后执行错误的动作。**空结果至少是可解释的
 |---|---|---|
 | v0.1 | 2026-09 | 初稿。定义最小 I6，并解决 I4-min 发现的 `suggestions` 归属问题（§4） |
 | **v0.2** | 2026-09 | **依据 bazidiy 实战实现回写 §3.2**：新增 `FC-7`~`FC-10`（适用/排除语境必须分开存、命中排除条件必须减分）。原规范的 matcher 会把"不适用：…先算八字"当成推荐证据，导致排序错乱。另新增 §3.3 记录**平局裁决未定义**这一已知缺口 |
+| **v0.2.1** | 2026-09 | **修条款号重号**：§4（与 I4 的关系）那一组原也用 `FC-7`~`FC-9`，与 §3.2 同号冲突。按"先定义的保留原号"，§4 那组改为 `FC-11`~`FC-13`。另按框架 `I6-G1`（域 MUST 可被完整列出）在 §2.1 补 `ListDomains` 操作 |
 
 ---
 
