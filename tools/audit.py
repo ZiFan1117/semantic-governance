@@ -48,6 +48,7 @@ ALLOW_UNDEFINED = True
 DECLARED_PREFIXES = {
     "I1", "I2", "I3", "I4", "I5", "I6", "G", "L", "ELE", "AG", "LD",
     "SP", "ACT", "WR",
+    "I1-G", "I2-G", "I3-G", "I4-G", "I5-G", "I6-G",
     "TR", "DV", "DR", "BGT", "SR",
     "ST", "AT", "ID", "CC", "AU", "EX", "BD", "RP", "MI", "NL", "XAD", "DF", "FD",
     "DG", "EN", "FC",
