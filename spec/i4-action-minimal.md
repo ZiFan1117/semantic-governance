@@ -557,7 +557,7 @@ return { slots: [], rejection: parsed, note: summarize(parsed) }
 
 ### 5.2 关于 `based_on` —— 本规范对"基于什么"的回答
 
-框架 §18.3 要求审计记录包含"**基于什么**"，但没说怎么记。
+框架 §10.5 要求审计记录包含"**基于什么**"，但没说怎么记。
 **记录全部读取集是不现实的**（不可枚举、开销大）。
 
 **本规范的设计：记录快照标识，而非读取明细。**
@@ -580,7 +580,7 @@ return { slots: [], rejection: parsed, note: summarize(parsed) }
 | **AU-3** | 审计记录 **MUST NOT** 可被修改或删除 |
 | **AU-4** | 记录 **MUST** 含 `definition_hash` —— 定义被改过也能知道当时执行的是哪一版 |
 | **AU-5** | **若本次提交发生了任何对事实层的读取**，记录 **MUST** 含 `based_on.snapshot`；未发生读取的早期拒绝（参数/目标/权限），`based_on` **MUST** 存在但 `snapshot` **MAY** 为 null（见 §9.2） |
-| **AU-6** | 实现 **SHOULD** 用 **CloudEvents** 格式对外发布审计事件（框架 §18.5） |
+| **AU-6** | 实现 **SHOULD** 用 **CloudEvents** 格式对外发布审计事件（框架 §18.3） |
 
 **关于 AU-4**：`action_version` 是语义版本，可能被复用（如错误地原地改定义）。
 `definition_hash` 是内容哈希，**唯一确定执行的是哪一份定义**。
