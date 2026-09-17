@@ -52,6 +52,7 @@ DECLARED_PREFIXES = {
     "TR", "DV", "DR", "BGT", "SR",
     "ST", "AT", "ID", "CC", "AU", "EX", "BD", "RP", "MI", "NL", "XAD", "DF", "FD",
     "DG", "EN", "FC",
+    "CT", "IG", "QT",
     "AC", "BT", "SV", "CR", "RJ", "LN", "P",
 }
 

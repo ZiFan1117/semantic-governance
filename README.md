@@ -127,6 +127,7 @@
 | **[spec/i4-action-minimal.md](spec/i4-action-minimal.md)** | **I4 动作契约** —— 单实例→多实例 · 同步 · 有审计 | v0.2.4 |
 | **[spec/i3-query-minimal.md](spec/i3-query-minimal.md)** | **I3 查询契约** —— 模式查询 · 遍历 · **派生求值与 `via` 溯源** | v0.2 |
 | **[spec/i6-discovery-minimal.md](spec/i6-discovery-minimal.md)** | **I6 发现契约** —— 枚举 · 描述 · 按需查找 | v0.1 |
+| **[spec/i5-ingest-minimal.md](spec/i5-ingest-minimal.md)** | **I5 接入契约** —— 契约先于数据 · **先身份后属性** · 拒收区形状 · 摄取幂等 | v0.1 |
 
 ### 框架与背景
 
