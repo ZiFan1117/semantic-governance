@@ -76,14 +76,68 @@ class Ctx:
         self.flag = a.action_qualified("flag_order")
 
 
-def cases() -> dict[str, list[tuple[str, str, callable]]]:
-    out: dict[str, list] = {"I4": [], "I3": [], "I6": []}
+def cases(adapter=None) -> dict[str, list[tuple[str, str, callable]]]:
+    out: dict[str, list] = {"I4": [], "I3": [], "I6": [], "E": []}
 
     def add(group, clause, name):
         def deco(fn):
             out[group].append((clause, name, fn))
             return fn
         return deco
+
+    # ====================================================== E（五要素）
+    #
+    # 框架 §25.2 的要素条款。**这一组是条件式的**：
+    #   E-2 / E-3 对任何实现都可测（它们只要求"声明的形态"正确）；
+    #   E-4 / E-5 只在实现**声明了策略**时可测 —— 未声明策略是合法状态
+    #   （框架 E-4~E-6 本身是条件式），此时自动免除，不视为失败。
+    E = "E"
+
+    def _strategies(a):
+        """取实现声明的策略；未提供该能力 ⇒ 视为未声明策略（合法）。"""
+        fn = getattr(a, "declared_strategies", None)
+        if fn is None:
+            return []
+        try:
+            return fn() or []
+        except Exception:
+            return []
+
+    @add(E, "E-1", "契约 MUST NOT 增设第六个要素")
+    def _(c):
+        unknown = c.a.carrier_audit()
+        assert unknown == [], \
+            f"出现了五要素之外的声明载体（第六要素的前兆）：{unknown}"
+
+    @add(E, "E-2", "规则 MUST 只声明一种形态（约束式 / 派生式）")
+    def _(c):
+        rules = c.a.declared_rules()
+        assert rules, "夹具本体应至少声明一条规则"
+        for r in rules:
+            forms = set(r["forms"])
+            assert len(forms) == 1, f"{r['target']}: 同一条规则声明了多种形态 {forms}"
+            assert forms <= {"requires", "derived_by"}, r
+
+    @add(E, "E-3", "派生式声明的产物是派生对象 → MUST NOT 落库")
+    def _(c):
+        rules = c.a.declared_rules()
+        assert any("derived_by" in r["forms"] for r in rules), \
+            "夹具本体应有派生式规则，否则本条款未被真正检验"
+        c.a.infer(relation="holds_transitively")
+        r = c.a.query(relation="holds_transitively")
+        assert r["budget"]["total"] == 0, "派生对象的产物不得被持久化（E-3 / I2-4）"
+
+    @add(E, "E-4", "若声明策略 → MUST 声明其依据的规则集")
+    def _(c):
+        for s in _strategies(c.a):
+            assert s.get("basis_rule_ids"), \
+                f"策略 {s.get('id')} 未声明依据的规则集（论域必须由规则界定）"
+
+    @add(E, "E-5", "若声明策略 → MUST NOT 改变合法性判定")
+    def _(c):
+        for s in _strategies(c.a):
+            assert s.get("changes_legality") is not True, \
+                f"策略 {s.get('id')} 声称能改变合法性 —— 值域只能是序与选中项"
 
     # ====================================================== I4
     I4 = "I4"
@@ -474,7 +528,7 @@ def main(argv: list[str]) -> int:
     for t in action_texts:
         adapter.load_action(t)
 
-    groups = cases()
+    groups = cases(adapter)
     summary: dict[str, tuple[int, int]] = {}
     failures: list[str] = []
 

@@ -20,8 +20,9 @@ python conformance/run.py myimpl/adapter.py
   I4  ✓ 17/17
   I3  ✓ 12/12
   I6  ✓ 11/11
+  E   ✓ 5/5
 
-一致性等级: I4-min/Core, I3-min/Core, I6-min/Core
+一致性等级: I4-min/Core, I3-min/Core, I6-min/Core, E-min/Core
 ```
 
 **全部通过 → 可以声称符合对应的 Core 等级。**
@@ -121,6 +122,37 @@ class Adapter:
 | 查找 | **F-3 `matched_on` 必填** · F-6 无匹配返回空 · F-1 概念筛选 |
 | 保证 | G4 确定性 · **G5 无副作用** |
 
+### E 组（5 项，条件式）
+
+对应框架 **§25.2 五要素条款**。**这一组是条件式的**——不声明策略的实现（如只做校验与派生的实现）是**合法状态**，不因缺少策略而不合规。
+
+| 用例 | 覆盖条款 | 失败意味着什么 |
+|---|---|---|
+| 无第六要素 | **`E-1`** | 契约文件里出现了五要素之外的声明载体 |
+| 规则形态唯一 | **`E-2`**（要素条款） | 同一条规则同时声明了约束式与派生式 |
+| 派生产物不落库 | **`E-3`** | 派生对象的产物被持久化了（跨要素越界） |
+| 策略须声明依据 | **`E-4`**（条件） | 声明了策略但没写它依据哪套规则 |
+| 策略不得改合法性 | **`E-5`**（条件） | 策略声称能把非法变合法 |
+
+> **`E` 组的条款编号与 I6 组的 `E-2`（`DescribeAction`）同名但无关**：前者是框架 §25.2 的要素条款，后者是 I6 规范里 `DescribeAction` 的保证编号。输出里的组前缀（`[E E-2]` vs `[I6 E-2]`）用于区分。
+
+**实现者需要提供三个只读方法**（缺省即视为"未声明策略"，对应条款自动免除）：
+
+```python
+def declared_rules(self) -> list[dict]:
+    """[{"target": "Order.status", "forms": ["requires"]}, ...]
+    forms 取值只能是 requires / derived_by —— 两者同时出现即违反 E-2。"""
+
+def declared_strategies(self) -> list[dict]:
+    """[{"id": "...", "basis_rule_ids": [...], "changes_legality": False}, ...]
+    不实现策略要素的实现返回 []（合法）。"""
+
+def carrier_audit(self) -> list[str]:
+    """扫描装载进来的契约，报告五要素之外的声明载体键；空列表 = 通过。"""
+```
+
+**E 组自身也要经得起检验**：`python conformance/_mutation_check.py` 会注入三类违规（增设第六要素 / 一条规则两种形态 / 策略无依据），断言 E 组**必须**抓住它们——防止用例空转。
+
 ---
 
 ## 一致性等级
@@ -130,6 +162,7 @@ class Adapter:
 | **I4-min/Core** | I4 组全过 |
 | **I3-min/Core** | I3 组全过 |
 | **I6-min/Core** | I6 组全过 |
+| **E-min/Core** | E 组全过（含条件式条款的免除） |
 
 **Plus 等级不在此套件内** —— 它们要求 SHOULD 条款
 （CEL、向量检索、CloudEvents），无法用统一用例判定。

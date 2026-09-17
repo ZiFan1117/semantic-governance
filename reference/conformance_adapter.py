@@ -153,3 +153,51 @@ class Adapter:
     def find_by_capability(self, need: str, **kw) -> list:
         return self.catalog.find_by_capability(
             need, **self._with_actor(kw))
+
+    # ------------------------------------------------------------ E（五要素）
+    #
+    # 供一致性套件的 E 组使用。协议见 conformance/README.md。
+    # 这四个方法只读"装载进来的声明"，不涉及运行时状态。
+
+    #: 规则在 Ossie 契约文件里的两种声明形态（框架 §5）。
+    RULE_FORMS = ("requires", "derived_by")
+
+    def _iter_rules(self):
+        """产出 (规则所有者, 形态列表)。规则可挂在对象上，也可挂在关系上。"""
+        m = self.model
+        if m is None:
+            return
+        for cname, c in m.concepts.items():
+            forms = [k for k in self.RULE_FORMS if getattr(c, k, None)]
+            if forms:
+                yield cname, forms
+            for rel in c.relationships:
+                rforms = [k for k in self.RULE_FORMS if getattr(rel, k, None)]
+                if rforms:
+                    yield rel.qualified, rforms
+
+    def declared_rules(self) -> list[dict]:
+        """全部规则声明及其形态（`requires` / `derived_by`），只读。"""
+        return [{"target": owner, "forms": forms}
+                for owner, forms in self._iter_rules()]
+
+    def declared_strategies(self) -> list[dict]:
+        """
+        本实现**不支持策略要素**（框架 §5 的五要素之一，Ossie 无载体）。
+
+        返回空列表 = 未声明策略。按框架 `E-4`~`E-6` 的条件式写法，
+        **未声明策略是合法状态**，因此 E 组的策略类用例自动免除。
+        """
+        return []
+
+    def carrier_audit(self) -> list[str]:
+        """
+        扫描装载进来的本体，报告五要素之外的声明载体键。
+
+        直接复用 `OssieModel` 在解析时对未支持字段的记录 —— 不另立白名单，
+        避免"审核标准"与"解析器支持范围"变成两处真源。
+        """
+        m = self.model
+        if m is None:
+            return []
+        return [f"{u.where}: {u.field}" for u in m.unsupported]
