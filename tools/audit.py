@@ -179,6 +179,9 @@ def check_sections(files: list[Path], rep: Report) -> int:
 
     n = 0
     for f in files:
+        # 历史记录描述的是"当时的状态"，其中的节号按当时的结构算，不参与现行检查
+        if str(f.relative_to(ROOT)).replace("\\", "/").startswith("docs/reviews/"):
+            continue
         for i, line in enumerate(read(f).split("\n"), 1):
             for m in re.finditer(r"§(\d+)\b", line):
                 v = int(m.group(1))

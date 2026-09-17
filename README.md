@@ -124,15 +124,15 @@
 | 文档 | 内容 | 状态 |
 |---|---|---|
 | **[spec/module-discipline.md](spec/module-discipline.md)** | **模块纪律** —— 原子化 · C1–C4 · 构建期门禁 · 渐进披露 · 判据 · 真源与派生视图 | v0.1 |
-| **[spec/i4-action-minimal.md](spec/i4-action-minimal.md)** | **I4 动作接口** —— 单实例→多实例 · 同步 · 有审计 | v0.2.4 |
-| **[spec/i3-query-minimal.md](spec/i3-query-minimal.md)** | **I3 查询接口** —— 模式查询 · 遍历 · **派生求值与 `via` 溯源** | v0.2 |
-| **[spec/i6-discovery-minimal.md](spec/i6-discovery-minimal.md)** | **I6 发现接口** —— 枚举 · 描述 · 按需查找 | v0.1 |
+| **[spec/i4-action-minimal.md](spec/i4-action-minimal.md)** | **I4 动作契约** —— 单实例→多实例 · 同步 · 有审计 | v0.2.4 |
+| **[spec/i3-query-minimal.md](spec/i3-query-minimal.md)** | **I3 查询契约** —— 模式查询 · 遍历 · **派生求值与 `via` 溯源** | v0.2 |
+| **[spec/i6-discovery-minimal.md](spec/i6-discovery-minimal.md)** | **I6 发现契约** —— 枚举 · 描述 · 按需查找 | v0.1 |
 
 ### 框架与背景
 
 | 文档 | 内容 |
 |---|---|
-| **[docs/framework.md](docs/framework.md)** | **主体**：理念、治理、五要素（对象·关系·规则·策略·动作）、分层、六个接口、合规等级、规范条款 |
+| **[docs/framework.md](docs/framework.md)** | **主体**：理念、治理、**五要素**（对象·关系·规则·策略·动作）、**四个正交维度**（要素/角色/格式/契约）、六个契约、纪律条款、合规等级、规范条款 |
 | [docs/rationale.md](docs/rationale.md) | **背景分析**：为什么这么设计——与知识图谱/Palantir 的对比、约束与推理机制、语义网失败的教训 |
 | [docs/open-questions/](docs/open-questions/) | 9 条开放问题的逐条展开（对应 Issues） |
 
