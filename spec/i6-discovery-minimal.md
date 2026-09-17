@@ -1,4 +1,5 @@
 # I6 发现接口 · 最小规范
+<!-- clauses: DG EN FC -->
 
 | 字段 | 值 |
 |---|---|
@@ -170,14 +171,14 @@ FindByCapability(need) → [CapabilityMatch]
 
 | # | 条款 |
 |---|---|
-| **F-1** | **MUST** 支持按概念筛选（`concept` 参数） |
-| **F-2** | **MUST** 支持按关键词匹配 `name` / `description` / `ai_context` |
-| **F-3** | **MUST** 在结果中给出 `matched_on` |
-| **F-4** | 匹配方法 **MUST** 在实现文档中声明 |
-| **F-5** | **SHOULD** 支持语义检索（向量） |
-| **F-6** | 无匹配时 **MUST** 返回空列表，**MUST NOT** 返回低质量兜底结果 |
+| **FC-1** | **MUST** 支持按概念筛选（`concept` 参数） |
+| **FC-2** | **MUST** 支持按关键词匹配 `name` / `description` / `ai_context` |
+| **FC-3** | **MUST** 在结果中给出 `matched_on` |
+| **FC-4** | 匹配方法 **MUST** 在实现文档中声明 |
+| **FC-5** | **SHOULD** 支持语义检索（向量） |
+| **FC-6** | 无匹配时 **MUST** 返回空列表，**MUST NOT** 返回低质量兜底结果 |
 
-**关于 F-6**：宁可返回空，也不要推荐一个不相关的动作 ——
+**关于 FC-6**：宁可返回空，也不要推荐一个不相关的动作 ——
 Agent 会当真，然后执行错误的动作。**空结果至少是可解释的。**
 
 ### 3.2 ⚠️ 排除语境必须与适用语境分开（实战发现）
@@ -201,12 +202,12 @@ Agent 会当真，然后执行错误的动作。**空结果至少是可解释的
 
 | # | 条款 |
 |---|---|
-| **F-7** | 可检索的适用条件与排除条件 **MUST** 分开存储为独立字段 |
-| **F-8** | 匹配器 **MUST** 对命中排除条件的候选**减分**，**MUST NOT** 只把该字段排除在检索面之外 |
-| **F-9** | `matched_on` 的 `evidence` **MUST** 标明该命中来自哪种语境 |
-| **F-10** | 净分为非正的候选 **MUST NOT** 被返回 |
+| **FC-7** | 可检索的适用条件与排除条件 **MUST** 分开存储为独立字段 |
+| **FC-8** | 匹配器 **MUST** 对命中排除条件的候选**减分**，**MUST NOT** 只把该字段排除在检索面之外 |
+| **FC-9** | `matched_on` 的 `evidence` **MUST** 标明该命中来自哪种语境 |
+| **FC-10** | 净分为非正的候选 **MUST NOT** 被返回 |
 
-**关于 F-8（关键）**：只把排除字段移出检索面是**不够的**。
+**关于 FC-8（关键）**：只把排除字段移出检索面是**不够的**。
 那样会让被排除的动作"少一个字段参与打分"，**反而显得更相关**。
 **必须显式减分。**
 
@@ -270,9 +271,9 @@ Agent 会当真，然后执行错误的动作。**空结果至少是可解释的
 
 | # | 条款 |
 |---|---|
-| **F-7** | I4 的 `suggestions` **MAY** 为空 —— 调用方 **MUST NOT** 依赖它存在 |
-| **F-8** | 实现 **MAY** 在 I4 的拒绝里内联 I6 的查询结果；若如此，`suggestions` 的每一项 **MUST** 标注其来源（`via: i6.FindByCapability`） |
-| **F-9** | 调用方在收到 `stage=precondition` 或 `stage=permission` 的拒绝后，**SHOULD** 用 `FindByCapability` 主动查找替代能力 |
+| **FC-7** | I4 的 `suggestions` **MAY** 为空 —— 调用方 **MUST NOT** 依赖它存在 |
+| **FC-8** | 实现 **MAY** 在 I4 的拒绝里内联 I6 的查询结果；若如此，`suggestions` 的每一项 **MUST** 标注其来源（`via: i6.FindByCapability`） |
+| **FC-9** | 调用方在收到 `stage=precondition` 或 `stage=permission` 的拒绝后，**SHOULD** 用 `FindByCapability` 主动查找替代能力 |
 
 ### 4.3 Agent 的完整自纠流程
 
@@ -299,10 +300,10 @@ Agent 会当真，然后执行错误的动作。**空结果至少是可解释的
 
 | 组 | 条款 |
 |---|---|
-| **枚举** | E-1 `ListConcepts` / `ListActions` MUST 可完整枚举（分页可）<br>E-2 `DescribeAction` MUST 返回足以构造提交请求的完整契约 |
-| **发现** | F-1 支持按概念筛选 · F-2 支持关键词匹配 · **F-3 MUST 给 matched_on**<br>F-4 匹配方法 MUST 声明 · F-5 SHOULD 支持语义检索 · **F-6 无匹配 MUST 返回空**<br>**F-7 适用/排除语境 MUST 分开存 · F-8 命中排除条件 MUST 减分 · F-9 evidence MUST 标语境 · F-10 净分非正 MUST NOT 返回** |
+| **枚举** | EN-1 `ListConcepts` / `ListActions` MUST 可完整枚举（分页可）<br>EN-2 `DescribeAction` MUST 返回足以构造提交请求的完整契约 |
+| **发现** | FC-1 支持按概念筛选 · FC-2 支持关键词匹配 · **FC-3 MUST 给 matched_on**<br>FC-4 匹配方法 MUST 声明 · FC-5 SHOULD 支持语义检索 · **FC-6 无匹配 MUST 返回空**<br>**FC-7 适用/排除语境 MUST 分开存 · FC-8 命中排除条件 MUST 减分 · FC-9 evidence MUST 标语境 · FC-10 净分非正 MUST NOT 返回** |
 | **保证** | G1 可枚举 · G2 权限过滤 · G3 自描述 · G4 确定性 · G5 无副作用 |
-| **与 I4** | F-7 调用方 MUST NOT 依赖 suggestions 存在<br>F-8 内联时 MUST 标注来源 · F-9 SHOULD 主动查替代 |
+| **与 I4** | FC-7 调用方 MUST NOT 依赖 suggestions 存在<br>FC-8 内联时 MUST 标注来源 · FC-9 SHOULD 主动查替代 |
 
 ---
 
@@ -311,7 +312,7 @@ Agent 会当真，然后执行错误的动作。**空结果至少是可解释的
 | 等级 | 要求 |
 |---|---|
 | **I6-min/Core** | 全部 MUST 条款 |
-| **I6-min/Plus** | Core + 语义检索（F-5）+ 能力标签 |
+| **I6-min/Plus** | Core + 语义检索（FC-5）+ 能力标签 |
 
 **验收方法**：给定一份已知的本体与动作集，
 
@@ -319,7 +320,7 @@ Agent 会当真，然后执行错误的动作。**空结果至少是可解释的
 2. `ListActions(concept=X)` 的结果**必须**等于声明了 `target.concept = X` 的动作集
 3. `DescribeAction` 的输出**必须**能让调用方成功构造一次合法提交
 4. `FindByCapability` 对一个**已知存在的动作**的查询，**必须**把它排在前 3
-5. `FindByCapability` 对一个**不存在的能力**的查询，**必须**返回空列表（F-6）
+5. `FindByCapability` 对一个**不存在的能力**的查询，**必须**返回空列表（FC-6）
 
 ---
 
@@ -328,7 +329,7 @@ Agent 会当真，然后执行错误的动作。**空结果至少是可解释的
 | 版本 | 日期 | 变更 |
 |---|---|---|
 | v0.1 | 2026-09 | 初稿。定义最小 I6，并解决 I4-min 发现的 `suggestions` 归属问题（§4） |
-| **v0.2** | 2026-09 | **依据 bazidiy 实战实现回写 §3.2**：新增 `F-7`~`F-10`（适用/排除语境必须分开存、命中排除条件必须减分）。原规范的 matcher 会把"不适用：…先算八字"当成推荐证据，导致排序错乱。另新增 §3.3 记录**平局裁决未定义**这一已知缺口 |
+| **v0.2** | 2026-09 | **依据 bazidiy 实战实现回写 §3.2**：新增 `FC-7`~`FC-10`（适用/排除语境必须分开存、命中排除条件必须减分）。原规范的 matcher 会把"不适用：…先算八字"当成推荐证据，导致排序错乱。另新增 §3.3 记录**平局裁决未定义**这一已知缺口 |
 
 ---
 

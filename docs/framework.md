@@ -1,4 +1,5 @@
 # 面向业务的操作型本体：纲领性框架（草案 v0.3）
+<!-- clauses: I1 I2 I3 I4 I5 I6 G L ELE AG -->
 
 > **理念**：语义治理（Semantic Governance）
 >
