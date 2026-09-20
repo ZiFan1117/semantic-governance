@@ -1,5 +1,5 @@
 # I6 发现接口 · 最小规范
-<!-- clauses: DG EN FC -->
+<!-- clauses: DG EN FC IFD -->
 
 | 字段 | 值 |
 |---|---|
@@ -65,6 +65,9 @@
 | `ListActions` | 可选：概念名 | 动作列表（简） |
 | `DescribeAction` | 动作全名 | 动作完整契约 |
 | `FindByCapability` | 需求描述 | 候选能力列表 + **匹配理由** |
+| **`ListInterfaces`** | 可选过滤条件 | **接口列表**（简） |
+| **`GetInterface`** | 接口全名 | 接口完整定义（含共享属性与链接约束） |
+| **`ListImplementers`** | 接口全名 | **实现该接口的对象类型列表** |
 
 ### 2.2 `ListConcepts`
 
@@ -155,6 +158,56 @@ FindByCapability(need) → [CapabilityMatch]
 
 > **不带匹配理由的推荐，Agent 无法判断该不该信。**
 > 有了它，Agent 能回答"为什么推荐这个"，也能据此决定是否重试。
+
+### 2.7 接口的发现（`IFD-1`~`IFD-3`）★
+
+```
+ListInterfaces() → [Interface]
+GetInterface(qualified_name) → InterfaceDefinition
+ListImplementers(qualified_name) → [ConceptRef]
+```
+
+**接口本身的定义与约束属 I7**；本节只定义**如何发现它**。
+
+**为什么必须在这里**：**"这类东西能被怎么对待"是 Agent 与业务软件都要问的问题。**
+没有这三个操作，接口就只是建模者脑中的概念，**不可被发现**。
+
+```json
+// GetInterface 的返回（节选）
+{
+  "qualified": "urn:sem:acme:device:upgradable",
+  "display_name": "可升级",
+  "api_name": "upgradable",
+  "status": "active",
+  "shared_properties": ["firmware_version"],
+  "extends": [],
+  "link_type_constraints": [
+    { "name": "固件包", "target_kind": "object_type", "target": "FirmwarePackage",
+      "cardinality": "MANY", "required": false }
+  ],
+  "implementers": ["RelayPlatform", "CommTerminal"]
+}
+```
+
+### 2.7.1 ⚠️ 与 `FindByCapability` 的区别（**MUST NOT 混用**）
+
+| | `FindByCapability` | `ListImplementers` |
+|---|---|---|
+| 检索**什么** | **动作** | **对象类型** |
+| 回答 | "我需要做 X，**哪些动作**能做 X？" | "这类东西**有哪些实现**？" |
+| 结果 | 动作候选 + `matched_on` | 实现该接口的对象类型 |
+| 归属 | 发现层（本节 §2.6） | 接口层（I7）经发现层暴露 |
+
+**两者可以在同一个目录里共存，但语义不同。** 措辞混用会导致 Agent 拿"动作建议"当"类型清单"用。
+
+| # | 条款 |
+|---|---|
+| **IFD-1** | 实现 **MUST** 提供 `ListInterfaces` / `GetInterface` / `ListImplementers`（若该实现支持接口，见 I7） |
+| **IFD-2** | `ListImplementers` 的结果 **MUST** 已按 `G2` 权限过滤 |
+| **IFD-3** | `FindByCapability`（按能力找动作）与 `ListImplementers`（按接口找实现方）**MUST** 是两个不同操作，**MUST NOT** 合并为一个 |
+
+> **`IFD-1` 的范围说明**：接口是**条件性能力**——与接入侧同理（框架 `LD-1`）。
+> **不实现接口的部署不必实现这三个操作**，但 **MUST** 显式声明"本实现不支持接口"（框架 `LD-3`）。
 
 ---
 

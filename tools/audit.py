@@ -54,6 +54,7 @@ DECLARED_PREFIXES = {
     "DG", "EN", "FC",
     "CT", "IG", "QT",
     "AC", "BT", "SV", "CR", "RJ", "LN", "P",
+    "IF", "II", "IL", "IFD",
 }
 
 
