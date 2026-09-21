@@ -46,7 +46,7 @@ ALLOW_UNDEFINED = True
 # 已知的条款前缀全集（用于区分"条款编号"与文档里普通的大写表格行）。
 # 新增前缀时，除了在文档登记表里声明，也要加进这里。
 DECLARED_PREFIXES = {
-    "I1", "I2", "I3", "I4", "I5", "I6", "G", "L", "ELE", "AG", "LD",
+    "I1", "I2", "I3", "I4", "I5", "I6", "I7", "G", "L", "ELE", "AG", "LD",
     "SP", "ACT", "WR",
     "I1-G", "I2-G", "I3-G", "I4-G", "I5-G", "I6-G",
     "TR", "DV", "DR", "BGT", "SR",
@@ -54,7 +54,7 @@ DECLARED_PREFIXES = {
     "DG", "EN", "FC",
     "CT", "IG", "QT",
     "AC", "BT", "SV", "CR", "RJ", "LN", "P",
-    "IF", "II", "IL", "IFD",
+    "IF", "II", "IL", "IFD", "IM",
 }
 
 

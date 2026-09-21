@@ -1,5 +1,5 @@
 # I4 动作接口 · 最小规范
-<!-- clauses: ST AT ID CC AU EX BD RP MI NL XAD DF FD EF PR RL RV EP -->
+<!-- clauses: ST AT ID CC AU EX BD RP MI NL XAD DF FD EF PR RL RV EP IM -->
 
 | 字段 | 值 |
 |---|---|
@@ -108,7 +108,7 @@ action:
       constraints: [<表达式>]
 
   permissions:
-    relation: <关系名>        # 交由外部授权系统判定
+    relation: <关系名>        # 交由外部授权系统判定（PR-2 的三问由该关系承载）
     resource: "${target}"
 
   preconditions:
@@ -118,6 +118,11 @@ action:
 
   effects:
     - <变更操作>
+
+  # 可选：动作的实现引用（本规范不规定其形态，只要求可引用）
+  implementation:
+    kind: <declarative | function | service>
+    ref: <实现标识（函数名 / 服务端点）>
 
   idempotency:
     key: <表达式，用于计算幂等键>
@@ -142,9 +147,18 @@ action:
 | `permissions.relation` | ✅ | 权限关系名。**引用**外部授权系统，不在本规范定义 |
 | `preconditions` | ❌ | 前置条件列表 |
 | `effects` | ✅ | 变更操作列表。**MUST NOT 为空**（否则不是动作） |
+| `implementation` | ❌ | **实现引用**（`kind` + `ref`）。本规范**只要求可引用**，不规定其形态与语言（框架 §5.8） |
 | `idempotency.key` | ✅ | 幂等键计算表达式 |
 | `side_effects` | ✅ | **MUST 为空数组**（最小 I4 排除副作用） |
 | `async` | ✅ | **MUST 为 `false`** |
+
+**`implementation` 的三条约束：**
+
+| # | 条款 |
+|---|---|
+| **IM-1** | 动作定义 **MAY** 声明 `implementation`；**MUST NOT** 在定义中内联实现的代码 |
+| **IM-2** | 若声明了 `implementation`，其 `ref` **MUST** 可被独立解析（能判断"这个实现是否存在"），**MUST NOT** 是自由文本描述 |
+| **IM-3** | 审计记录 **MUST** 能追溯到本次提交所用的实现 —— 至少能回答"这次执行的是声明式效果，还是某个实现" |
 
 ### 2.3 表达式语言
 
@@ -760,6 +774,7 @@ return { slots: [], rejection: parsed, note: summarize(parsed) }
 | **规则** | **RL-1 链接的创建/删除 MUST 区分多对多与外键** · **RL-2 函数规则 MUST 独占** |
 | **编辑策略** | **PR-1 权限与业务条件 MUST 分离** · **PR-2 权限 MUST 回答官方三问** · **EP-1 实现 MUST 支持「仅允许通过操作编辑」** |
 | **撤销** | **RV-1 只撤实例编辑、不撤副作用** · **RV-2 仅最新编辑可撤** · **RV-3 撤销能力 MUST NOT 可事后补开** |
+| **实现引用** | **IM-1 MAY 声明 implementation、MUST NOT 内联代码** · **IM-2 ref MUST 可独立解析** · **IM-3 审计 MUST 能追溯到实现** |
 
 ---
 
