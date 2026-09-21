@@ -55,6 +55,7 @@ DECLARED_PREFIXES = {
     "CT", "IG", "QT",
     "AC", "BT", "SV", "CR", "RJ", "LN", "P",
     "IF", "II", "IL", "IFD", "IM",
+    "ELE-7a", "ELE-7b", "ELE-7c", "ELE-7d",
 }
 
 

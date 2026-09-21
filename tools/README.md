@@ -56,12 +56,12 @@ python tools/audit.py
 
 | 脚本 | 做了什么 |
 |---|---|
-| `restructure_five_elements.py` | 把 `framework.md` 骨架从"层/接口/治理"重排为**五要素**主轴；含节号唯一性校验与幂等保护 |
+| `restructure_five_elements.py` | 把 `framework.md` 骨架从"层/接口/治理"重排为**五要素**主轴（**v0.6 已改为三要素 + 接口**）；含节号唯一性校验与幂等保护 |
 | `fix_section_refs.py` | 节号顺延 +5 后，修正**指向框架**的交叉引用（不误伤 spec 内部节号） |
 | `detach_impl_refs.py` | 删除 `reference/` 与 `conformance/` 后，把指向已删产物的措辞降级为自洽表述 |
-| `rename_e_clause.py` | 框架要素条款 `E-1`~`E-8` → `ELE-1`~`ELE-8`（避开 I4 的表达式语言组） |
+| `rename_e_clause.py` | 框架要素条款 `E-1`~`E-8` → `ELE-1(deprecated)`~`ELE-6`（避开 I4 的表达式语言组） |
 | `disambiguate_clause_ids.py` | 框架 Agent-first 组 `A-n` → `AG-n`；补三处跨文档限定 |
-| `unify_object_term.py` | 正文"概念" → "对象"（五要素口径），保留 Ossie 载体名与接口签名 |
+| `unify_object_term.py` | 正文"概念" → "对象"（当时的五要素口径），保留 Ossie 载体名与接口签名 |
 | `disambiguate_spec_prefixes.py` | 消解 spec 之间的条款前缀撞号（268 处） |
 | `fix_prefix_residue.py` | 补掉上一脚本留下的两处残余撞号（`DF`/`BG`/`BD`） |
 

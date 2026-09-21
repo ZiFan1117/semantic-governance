@@ -7,7 +7,7 @@
 | **状态** | 征求意见 |
 | **规范等级** | **Normative**（含 MUST / MUST NOT / SHOULD） |
 | **上级文档** | [`../docs/framework.md`](../docs/framework.md) §18 |
-| **五要素落位** | 实现 **动作**（五要素中唯一能改变状态的）；规则以 `preconditions`（业务性）与 `parameters[].constraints`（结构性）为载体 |
+| **构件落位** | 实现 **动作**（构件中唯一能改变状态的）。**规则与策略在此是动作的内部成分**：动作侧规则以 `preconditions`（业务性）与 `parameters[].constraints`（结构性）为载体；策略以 `submission_criteria` 与 `permissions` 为载体（§4.6） |
 | **本规范自有条款前缀** | `S-`（阶段）· `A-`（原子性）· `I-`（幂等）· `C-`（并发）· `R-`（审计）· `E-`（表达式语言）· `B-`（判据绑定）· `Q-`（重放）· `M-`（多实例）· `N-`（null）· `X-`（适配层）· `D-`（定义校验）· `F-`（字段） |
 | **里程碑** | v0.3 |
 | **对应 Issue** | #3 |

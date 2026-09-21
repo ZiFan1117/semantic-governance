@@ -1225,7 +1225,7 @@ CDC + 列存 + 图库（如需要）+ 规则引擎 + 流程引擎
 ```
 【理论底座】TBox（术语，"允许什么"） / ABox（断言，"实际是什么"）
 
-【五要素 · 声明侧】（框架 v0.4 的主轴，取代了旧的"六层"表述）
+【五要素 · 声明侧】（框架 v0.4 的主轴；**v0.6 已改为三要素 + 接口**）
   对象  ✅ Ossie concept / type / extends / identify_by
   关系  ✅ Ossie relationships / roles / multiplicity / verbalizes
   规则  ⚠️ 槽位来自 Ossie（requires 约束式 · derived_by 派生式 → 派生对象，不落库）
@@ -1233,7 +1233,7 @@ CDC + 列存 + 图库（如需要）+ 规则引擎 + 流程引擎
   动作  ❌ 无公开规范（原创；概念参照 Palantir kinetic elements）
 
 【TBox / ABox 是"角色"，不是"层"】
-  定义侧（TBox 角色）= 本体空间里五个要素的声明
+  定义侧（TBox 角色）= 本体空间里三个要素与接口的声明
   事实侧（ABox 角色）= 数据来源提供的实例与事实
   两者 MUST 分属不同存放单元（框架 §11.2 LD-4/LD-5）
 
